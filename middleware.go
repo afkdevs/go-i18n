@@ -30,7 +30,7 @@ func NewMiddleware(opts ...MiddlewareOption) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			lang := cfg.langHandler(r)
 			if lang != "" {
-				ctx := NewContextWithLanguage(r.Context(), lang)
+				ctx := SetLangToContext(r.Context(), lang)
 				r = r.WithContext(ctx)
 			}
 			next.ServeHTTP(w, r)
@@ -53,9 +53,9 @@ func GetLanguage(ctx context.Context) language.Tag {
 	return tags[0]
 }
 
-// NewContextWithLanguage sets the language to the context.
+// SetLangToContext sets the language to the context.
 //
 // You can use this function to set the language to the context manually.
-func NewContextWithLanguage(ctx context.Context, language string) context.Context {
+func SetLangToContext(ctx context.Context, language string) context.Context {
 	return context.WithValue(ctx, languageCtxKey, language)
 }

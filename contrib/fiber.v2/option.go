@@ -1,4 +1,4 @@
-package fiberi18n
+package fiber
 
 import "github.com/gofiber/fiber/v2"
 
@@ -9,6 +9,7 @@ type config struct {
 
 const defaultHeaderKey = "Accept-Language"
 
+// Option is a function that configures the Fiber middleware.
 type Option func(*config)
 
 func newConfig(opts ...Option) *config {

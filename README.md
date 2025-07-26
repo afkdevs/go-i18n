@@ -2,21 +2,14 @@
 
 [![Go](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml/badge.svg)](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/afkdevs/go-i18n)](https://goreportcard.com/report/github.com/afkdevs/go-i18n)
+[![codecov](https://codecov.io/gh/afkdevs/go-i18n/graph/badge.svg?token=DPEMJ3DgRX)](https://codecov.io/gh/afkdevs/go-i18n)
 [![GoDoc](https://pkg.go.dev/badge/github.com/afkdevs/go-i18n)](https://pkg.go.dev/github.com/afkdevs/go-i18n)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/afkdevs/go-i18n)](https://golang.org/doc/devel/release.html)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-go-i18n is a simple internationalization library for Golang.
-It provides a way to translate strings into multiple languages.
-This library is wrapper for [go-i18n](https://github.com/nicksnyder/go-i18n) with some additional features.
+go-i18n is a simple internationalization library for Go.
+This wraps [nicksnyder/go-i18n](https://github.com/nicksnyder/go-i18n) and adds useful features for easier integration and customization.
 
-## Table of Contents
-- [Installation](#installation)
-- [Features](#features)
-- [Usage](#usage)
-- [Examples](#examples)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Installation
 ```bash
@@ -24,25 +17,26 @@ go get -u github.com/afkdevs/go-i18n
 ```
 
 ## Features
-- [x] Support translation file in YAML, JSON, and TOML format
-- [x] Translation
-- [x] Context translation
-- [x] Parametrized translation
-- [x] Missing translation Fallback
-- [x] Custom extract language from Context
+
+- [x] Support for translation files in **YAML**, **JSON**, and **TOML** formats
+- [x] Simple string translation
+- [x] Context-based translation
+- [x] Parameterized translation
+- [x] Fallback for missing translations
+- [x] Customizable language extraction from context
 
 ## Usage
 
 ### Create Translation File
+**`locales/en.yaml`**
 ```yaml
-# locales/en.yaml
 hello: Hello
 hello_name: Hello, {{.name}}
 hello_name_age: Hello, {{.name}}. You are {{.age}} years old
 ```
 
+**`locales/id.yaml`**
 ```yaml
-# locales/id.yaml
 hello: Halo
 hello_name: Halo, {{.name}}
 hello_name_age: Halo, {{.name}}. Kamu berumur {{.age}} tahun
@@ -50,45 +44,73 @@ hello_name_age: Halo, {{.name}}. Kamu berumur {{.age}} tahun
 
 ### Initialize i18n
 ```go
+package main
+
 import (
+	"log"
+
 	"github.com/afkdevs/go-i18n"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 )
 
-i18n.Init(language.English,
-    i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
-    i18n.WithTranslationFile("locales/en.yaml", "locales/id.yaml"),
-)
+func main() {
+	err := i18n.Init(language.English,
+		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
+		i18n.WithTranslationFile("locales/en.yaml", "locales/id.yaml"),
+	)
+	if err != nil {
+		log.Fatalf("failed to initialize i18n: %v", err)
+	}
+}
 ```
 
 ### Translate your text
+
+#### Simple translation
+
 ```go
-fmt.Println(i18n.T("hello"))
-// Hello
-fmt.Println(i18n.T("hello", i18n.Lang("id")))
-// Halo
-fmt.Println(i18n.T("hello_name", i18n.Param("name", "John")))
-// Hello, John
-fmt.Println(i18n.T("hello_name", i18n.Lang("id"), i18n.Param("name", "John")))
-// Halo, John
-fmt.Println(i18n.T("hello_name_age", i18n.Params{"name": "John", "age": 20}))
-// Hello, John. You are 20 years old
-fmt.Println(i18n.T("hello_name_age", i18n.Lang("id"), i18n.Params{"name": "John", "age": 20}))
-// Halo, John. Kamu berumur 20 tahun
+msg := i18n.T("hello")
+
+// Or with a specific language
+msg = i18n.T("hello", i18n.Lang("id"))
 ```
 
-## Examples
-See [examples/](/examples/) for a variety of examples.
+#### Translation with parameters
+
+```go
+// Single parameter
+msg := i18n.T("hello_name", i18n.Param("name", "John"))
+
+// Multiple parameters
+msg := i18n.T("hello_name_age", i18n.Params{
+	"name": "John",
+	"age":  20,
+})
+
+// Or using a map
+msg := i18n.T("hello_name_age", map[string]any{
+	"name": "John",
+	"age":  20,
+})
+```
+
+## Context Translation
+
+Use `TCtx` to translate using a `context.Context`, which is helpful for request-scoped translations.
+
+Example with **chi**:
+
 ```go
 package main
 
 import (
+	"net/http"
+
 	"github.com/afkdevs/go-i18n"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
-	"net/http"
 )
 
 func main() {
@@ -100,7 +122,10 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Use(i18n.Middleware)
+
+	// Automatically inject language context
+	r.Use(i18n.NewMiddleware())
+
 	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		message := i18n.TCtx(r.Context(), "hello")
 		_, _ = w.Write([]byte(message))
@@ -111,20 +136,46 @@ func main() {
 		_, _ = w.Write([]byte(message))
 	})
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	http.ListenAndServe(":3000", r)
+}
+```
+
+## Fallback for Missing Translations
+
+You can set a global configuration for missing translations by using `i18n.WithMissingTranslationHandler` when initializing i18n.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/afkdevs/go-i18n"
+	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
+)
+
+func main() {
+	if err := i18n.Init(language.English,
+		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
+		i18n.WithTranslationFile("locales/en.yaml", "locales/id.yaml"),
+		i18n.WithMissingTranslationHandler(missingTranslationHandler),
+	); err != nil {
 		panic(err)
 	}
 }
-```
-```bash
-curl http://localhost:3000/hello # Hello
-curl http://localhost:3000/hello/John # Hello, John
-curl -H "Accept-Language: id" http://localhost:3000/hello # Halo
-curl -H "Accept-Language: id" http://localhost:3000/hello/John # Halo, John
+
+func missingTranslationHandler(id string, _ error) string {
+	return fmt.Sprintf("ERROR: missing translation for %q", id)
+}
 ```
 
 ## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Contributions are welcome!  
+If you’d like to make major changes, please open an issue first to discuss your ideas.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details

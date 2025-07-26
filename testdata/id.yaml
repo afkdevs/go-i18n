@@ -1,4 +1,4 @@
 test: "Ini adalah pesan tes"
-hello: "Halo {{.name}}"
-hello_world: "Halo, Dunia!"
-hello_age: "Halo {{.name}}! Kamu berumur {{.age}} tahun."
+hello: "Halo"
+hello_name: "Halo, {{.name}}"
+hello_name_age: "Halo, {{.name}}! Kamu berumur {{.age}} tahun."

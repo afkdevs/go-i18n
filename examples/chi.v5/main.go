@@ -23,7 +23,7 @@ func main() {
 
 	r := chi.NewRouter()
 	// Register i18n middleware
-	r.Use(i18n.Middleware)
+	r.Use(i18n.NewMiddleware())
 
 	// Register route
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func main() {
 		name := chi.URLParam(r, "name")
 
 		// Get translation message with context
-		message := i18n.TCtx(r.Context(), "hello", i18n.Params{"name": name})
+		message := i18n.TCtx(r.Context(), "hello_name", i18n.Params{"name": name})
 
 		// Write response
 		w.Write([]byte(message))

@@ -1,4 +1,4 @@
-package fiberi18n
+package fiber
 
 import (
 	"github.com/afkdevs/go-i18n"
@@ -27,7 +27,7 @@ func New(opts ...Option) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		lang := cfg.langHandler(c)
 		if lang != "" {
-			ctx := i18n.NewContextWithLanguage(c.UserContext(), lang)
+			ctx := i18n.SetLangToContext(c.UserContext(), lang)
 			c.SetUserContext(ctx)
 		}
 		return c.Next()

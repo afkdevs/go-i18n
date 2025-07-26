@@ -1,4 +1,4 @@
-module github.com/afkdevs/go-i18n/examples/go-chi
+module github.com/afkdevs/go-i18n/examples/chi.v5
 
 go 1.23.0
 

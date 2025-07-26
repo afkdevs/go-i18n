@@ -1,4 +1,4 @@
-module github.com/afkdevs/go-i18n/contrib/fiber-i18n
+module github.com/afkdevs/go-i18n/contrib/fiber.v2
 
 go 1.23.0
 

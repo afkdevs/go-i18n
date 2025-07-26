@@ -1,8 +1,6 @@
-module github.com/afkdevs/go-i18n/examples/go-http
+module github.com/afkdevs/go-i18n/examples/http
 
 go 1.23.0
-
-toolchain go1.24.5
 
 require (
 	github.com/afkdevs/go-i18n v0.0.0-0000000000000-000000000000
