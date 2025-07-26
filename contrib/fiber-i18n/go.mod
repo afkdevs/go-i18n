@@ -1,4 +1,4 @@
-module github.com/afkdevs/go-i18n/fiber-i18n
+module github.com/afkdevs/go-i18n/contrib/fiber-i18n
 
 go 1.23.0
 
@@ -27,4 +27,4 @@ require (
 	golang.org/x/sys v0.28.0 // indirect
 )
 
-replace github.com/afkdevs/go-i18n => ..
+replace github.com/afkdevs/go-i18n => ../..

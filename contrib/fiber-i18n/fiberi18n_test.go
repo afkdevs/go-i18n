@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/afkdevs/go-i18n"
-	fiberi18n "github.com/afkdevs/go-i18n/fiber-i18n"
+	fiberi18n "github.com/afkdevs/go-i18n/contrib/fiber-i18n"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
