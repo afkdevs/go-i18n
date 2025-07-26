@@ -2,7 +2,7 @@ package i18n
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -14,8 +14,6 @@ var (
 	defaultLanguage           language.Tag
 	missingTranslationHandler func(string, error) string
 	extractLanguageFunc       func(context.Context) string
-
-	ErrI18nNotInitialized = errors.New("i18n is not initialized")
 )
 
 func defaultExtractLanguageFunc(ctx context.Context) string {
@@ -27,7 +25,7 @@ func defaultExtractLanguageFunc(ctx context.Context) string {
 }
 
 func defaultMissingTranslationFunc(messageID string, _ error) string {
-	return messageID
+	return fmt.Sprintf("ERROR: missing translation for %q", messageID)
 }
 
 // Init initializes the i18n package. It must be called before any other function.
@@ -96,7 +94,7 @@ func Get(id string, opts ...any) string {
 //	message := i18n.GetCtx(ctx, "hello", i18n.Params{"name": "John"})
 func GetCtx(ctx context.Context, id string, opts ...any) string {
 	if bundle == nil {
-		panic(ErrI18nNotInitialized)
+		return "ERROR: i18n is not initialized"
 	}
 
 	cfg := newLocalizeConfig(opts...)

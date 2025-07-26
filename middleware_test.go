@@ -13,6 +13,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func chainMiddleware(h http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
+	for _, mw := range middlewares {
+		h = mw(h)
+	}
+	return h
+}
+
 func TestMiddleware(t *testing.T) {
 	err := i18n.Init(language.English,
 		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
@@ -20,89 +27,125 @@ func TestMiddleware(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	handlerA := func(w http.ResponseWriter, r *http.Request) {
+	testHandler := func(w http.ResponseWriter, r *http.Request) {
 		message := i18n.TCtx(r.Context(), "test")
 		_, _ = w.Write([]byte(message))
 	}
-	handlerB := func(w http.ResponseWriter, r *http.Request) {
+	helloHandler := func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 		message := i18n.TCtx(r.Context(), "hello", i18n.Param("name", name))
 		_, _ = w.Write([]byte(message))
 	}
+	i18nMiddleware := i18n.NewMiddleware(
+		i18n.WithHeaderKey("Accept-Language"),
+	)
+
+	r := http.NewServeMux()
+	r.Handle("/test", chainMiddleware(http.HandlerFunc(testHandler), i18nMiddleware))
+	r.Handle("/hello", chainMiddleware(http.HandlerFunc(helloHandler), i18nMiddleware))
 
 	testCases := []struct {
 		name            string
-		lang            string
-		url             string
-		handler         http.HandlerFunc
+		acceptLanguage  string
+		path            string
 		expectedMessage string
 	}{
 		{
 			name:            "without header and query param",
-			url:             "/",
-			handler:         handlerA,
+			path:            "/test",
 			expectedMessage: "This is test message",
 		},
 		{
 			name:            "without header and with query param",
-			url:             "/?name=John",
-			handler:         handlerB,
+			path:            "/hello?name=John",
 			expectedMessage: "Hello, John!",
 		},
 		{
 			name:            "with accept-language en",
-			url:             "/",
-			lang:            "en",
-			handler:         handlerA,
+			path:            "/test",
+			acceptLanguage:  "en",
 			expectedMessage: "This is test message",
 		},
 		{
 			name:            "with accept-language en and with query param",
-			url:             "/?name=John",
-			lang:            "en",
-			handler:         handlerB,
+			path:            "/hello?name=John",
+			acceptLanguage:  "en",
 			expectedMessage: "Hello, John!",
 		},
 		{
 			name:            "with accept-language id",
-			url:             "/",
-			lang:            "id",
-			handler:         handlerA,
+			path:            "/test",
+			acceptLanguage:  "id",
 			expectedMessage: "Ini adalah pesan tes",
 		},
 		{
 			name:            "with accept-language id and with query param",
-			url:             "/?name=John",
-			lang:            "id",
-			handler:         handlerB,
+			path:            "/hello?name=John",
+			acceptLanguage:  "id",
 			expectedMessage: "Halo John",
 		},
 		{
 			name:            "with accept-language es",
-			url:             "/",
-			lang:            "es",
-			handler:         handlerA,
+			path:            "/test",
+			acceptLanguage:  "es",
 			expectedMessage: "This is test message",
 		},
 		{
 			name:            "with multiple accept-language",
-			url:             "/",
-			lang:            "es-ES,id-ID,en-US",
-			handler:         handlerA,
+			path:            "/test",
+			acceptLanguage:  "es-ES,id-ID,en-US",
 			expectedMessage: "Ini adalah pesan tes",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, tc.url, nil)
-			rec := httptest.NewRecorder()
-			if tc.lang != "" {
-				req.Header.Set("Accept-Language", tc.lang)
+			req := httptest.NewRequest("GET", tc.path, nil)
+			if tc.acceptLanguage != "" {
+				req.Header.Set("Accept-Language", tc.acceptLanguage)
 			}
+			resp := httptest.NewRecorder()
+			r.ServeHTTP(resp, req)
+			assert.Equal(t, tc.expectedMessage, resp.Body.String())
+		})
+	}
 
-			i18n.Middleware(tc.handler).ServeHTTP(rec, req)
-			assert.Equal(t, tc.expectedMessage, rec.Body.String())
+	r = http.NewServeMux()
+
+	i18nMiddleware = i18n.NewMiddleware(
+		i18n.WithLanguageHandler(func(r *http.Request) string {
+			return r.URL.Query().Get("lang")
+		}),
+	)
+	r.Handle("/test", chainMiddleware(http.HandlerFunc(testHandler), i18nMiddleware))
+
+	testCasesCustomHandler := []struct {
+		name            string
+		path            string
+		expectedMessage string
+	}{
+		{
+			name:            "with query lang en",
+			path:            "/test?lang=en",
+			expectedMessage: "This is test message",
+		},
+		{
+			name:            "with query lang id",
+			path:            "/test?lang=id",
+			expectedMessage: "Ini adalah pesan tes",
+		},
+		{
+			name:            "with query lang empty",
+			path:            "/test",
+			expectedMessage: "This is test message",
+		},
+	}
+	for _, tc := range testCasesCustomHandler {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", tc.path, nil)
+			resp := httptest.NewRecorder()
+			r.ServeHTTP(resp, req)
+			assert.Equal(t, tc.expectedMessage, resp.Body.String())
 		})
 	}
 }
