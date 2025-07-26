@@ -2,6 +2,7 @@
 
 [![Go](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml/badge.svg)](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/afkdevs/go-i18n)](https://goreportcard.com/report/github.com/afkdevs/go-i18n)
+[![codecov](https://codecov.io/gh/afkdevs/go-i18n/graph/badge.svg?token=DPEMJ3DgRX)](https://codecov.io/gh/afkdevs/go-i18n)
 [![GoDoc](https://pkg.go.dev/badge/github.com/afkdevs/go-i18n)](https://pkg.go.dev/github.com/afkdevs/go-i18n)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/afkdevs/go-i18n)](https://golang.org/doc/devel/release.html)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -17,12 +18,12 @@ go get -u github.com/afkdevs/go-i18n
 
 ## Features
 
-- ✅ Support for translation files in **YAML**, **JSON**, and **TOML** formats
-- ✅ Simple string translation
-- ✅ Context-based translation
-- ✅ Parameterized translation
-- ✅ Fallback for missing translations
-- ✅ Customizable language extraction from context
+- [x] Support for translation files in **YAML**, **JSON**, and **TOML** formats
+- [x] Simple string translation
+- [x] Context-based translation
+- [x] Parameterized translation
+- [x] Fallback for missing translations
+- [x] Customizable language extraction from context
 
 ## Usage
 
@@ -139,15 +140,22 @@ func main() {
 }
 ```
 
-## More Examples
-
-More examples can be found in the [examples](examples) directory.
-
-## Set default missing translation message
+## Fallback for Missing Translations
 
 You can set a global configuration for missing translations by using `i18n.WithMissingTranslationHandler` when initializing i18n.
 
 ```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/afkdevs/go-i18n"
+	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
+)
+
 func main() {
 	if err := i18n.Init(language.English,
 		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
