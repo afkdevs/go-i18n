@@ -3,6 +3,7 @@ package i18n
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -106,10 +107,10 @@ func GetCtx(ctx context.Context, id string, opts ...any) string {
 		languages = append(languages, cfg.language)
 	}
 	lang := extractLanguageFunc(ctx)
-	if lang != "" && !contains(languages, lang) {
+	if lang != "" && !slices.Contains(languages, lang) {
 		languages = append(languages, lang)
 	}
-	if !contains(languages, defaultLanguage.String()) {
+	if !slices.Contains(languages, defaultLanguage.String()) {
 		languages = append(languages, defaultLanguage.String())
 	}
 
