@@ -1,5 +1,12 @@
-# i18n
-i18n is a simple internationalization library for Golang.
+# go-i18n
+
+[![Go](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml/badge.svg)](https://github.com/afkdevs/go-i18n/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/afkdevs/go-i18n)](https://goreportcard.com/report/github.com/afkdevs/go-i18n)
+[![GoDoc](https://pkg.go.dev/badge/github.com/afkdevs/go-i18n)](https://pkg.go.dev/github.com/afkdevs/go-i18n)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/afkdevs/go-i18n)](https://golang.org/doc/devel/release.html)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+go-i18n is a simple internationalization library for Golang.
 It provides a way to translate strings into multiple languages.
 This library is wrapper for [go-i18n](https://github.com/nicksnyder/go-i18n) with some additional features.
 
@@ -13,7 +20,7 @@ This library is wrapper for [go-i18n](https://github.com/nicksnyder/go-i18n) wit
 
 ## Installation
 ```bash
-go get -u github.com/ahmadfaizk/i18n
+go get -u github.com/afkdevs/go-i18n
 ```
 
 ## Features
@@ -44,7 +51,7 @@ hello_name_age: Halo, {{.name}}. Kamu berumur {{.age}} tahun
 ### Initialize i18n
 ```go
 import (
-	"github.com/ahmadfaizk/i18n"
+	"github.com/afkdevs/go-i18n"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 )
@@ -72,12 +79,12 @@ fmt.Println(i18n.T("hello_name_age", i18n.Lang("id"), i18n.Params{"name": "John"
 ```
 
 ## Examples
-See [examples/](https://github.com/ahmadfaizk/i18n/blob/main/examples/) for a variety of examples.
+See [examples/](/examples/) for a variety of examples.
 ```go
 package main
 
 import (
-	"github.com/ahmadfaizk/i18n"
+	"github.com/afkdevs/go-i18n"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"

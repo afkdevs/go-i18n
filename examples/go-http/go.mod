@@ -1,13 +1,15 @@
-module github.com/ahmadfaizk/i18n/examples/go-http
+module github.com/afkdevs/go-i18n/examples/go-http
 
-go 1.18
+go 1.23.0
+
+toolchain go1.24.5
 
 require (
-	github.com/ahmadfaizk/i18n v0.1.0
-	golang.org/x/text v0.17.0
+	github.com/afkdevs/go-i18n v0.0.0-0000000000000-000000000000
+	golang.org/x/text v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
+require github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
 
-replace github.com/ahmadfaizk/i18n => ../..
+replace github.com/afkdevs/go-i18n => ../..
