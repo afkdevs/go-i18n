@@ -1,26 +1,27 @@
 package i18n
 
 import (
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"reflect"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-// Params is an alias for map[string]interface{}. It is used to set template data for the message.
+// Params is an alias for map[string]any. It is used to set template data for the message.
 //
 // Example:
 //
 //	i18n.T("hello", i18n.Params{"name": "John", "age": 30})
-type Params map[string]interface{}
+type Params map[string]any
 
 type localizeConfig struct {
-	params         map[string]interface{}
+	params         map[string]any
 	defaultMessage string
 	language       string
 }
 
 func newLocalizeConfig(opts ...any) *localizeConfig {
 	c := &localizeConfig{
-		params: make(map[string]interface{}),
+		params: make(map[string]any),
 	}
 	for _, opt := range opts {
 		reflectValue := reflect.ValueOf(opt)
@@ -29,13 +30,17 @@ func newLocalizeConfig(opts ...any) *localizeConfig {
 				c.params[key.String()] = reflectValue.MapIndex(key).Interface()
 			}
 		} else if reflectValue.Kind() == reflect.Func {
-			reflectValue.Call([]reflect.Value{reflect.ValueOf(c)})
+			// Check if the function is a LocalizeOption
+			if localizeOpt, ok := opt.(LocalizeOption); ok {
+				localizeOpt(c)
+				continue
+			}
 		}
 	}
 	return c
 }
 
-func (c localizeConfig) toI18nLocalizeConfig(id string) *i18n.LocalizeConfig {
+func (c *localizeConfig) toI18nLocalizeConfig(id string) *i18n.LocalizeConfig {
 	localizeConfig := &i18n.LocalizeConfig{
 		MessageID:    id,
 		TemplateData: c.params,
@@ -52,16 +57,12 @@ func (c localizeConfig) toI18nLocalizeConfig(id string) *i18n.LocalizeConfig {
 // LocalizeOption is a function that configures the localizeConfig.
 type LocalizeOption func(*localizeConfig)
 
-type LOption interface {
-	map[string]interface{} | LocalizeOption
-}
-
 // Param set single value of template data for the message.
 //
 // Example:
 //
 //	i18n.T("hello", i18n.Param("name", "John"))
-func Param(key string, value interface{}) LocalizeOption {
+func Param(key string, value any) LocalizeOption {
 	return func(c *localizeConfig) {
 		c.params[key] = value
 	}

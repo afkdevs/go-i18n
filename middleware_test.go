@@ -33,7 +33,7 @@ func TestMiddleware(t *testing.T) {
 	}
 	helloHandler := func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
-		message := i18n.TCtx(r.Context(), "hello", i18n.Param("name", name))
+		message := i18n.TCtx(r.Context(), "hello_name", i18n.Param("name", name))
 		_, _ = w.Write([]byte(message))
 	}
 	i18nMiddleware := i18n.NewMiddleware(
@@ -58,7 +58,7 @@ func TestMiddleware(t *testing.T) {
 		{
 			name:            "without header and with query param",
 			path:            "/hello?name=John",
-			expectedMessage: "Hello, John!",
+			expectedMessage: "Hello, John",
 		},
 		{
 			name:            "with accept-language en",
@@ -70,7 +70,7 @@ func TestMiddleware(t *testing.T) {
 			name:            "with accept-language en and with query param",
 			path:            "/hello?name=John",
 			acceptLanguage:  "en",
-			expectedMessage: "Hello, John!",
+			expectedMessage: "Hello, John",
 		},
 		{
 			name:            "with accept-language id",
@@ -82,7 +82,7 @@ func TestMiddleware(t *testing.T) {
 			name:            "with accept-language id and with query param",
 			path:            "/hello?name=John",
 			acceptLanguage:  "id",
-			expectedMessage: "Halo John",
+			expectedMessage: "Halo, John",
 		},
 		{
 			name:            "with accept-language es",
@@ -189,7 +189,7 @@ func TestGetLanguage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			if tc.lang != "" {
-				ctx = i18n.NewContextWithLanguage(ctx, tc.lang)
+				ctx = i18n.SetLangToContext(ctx, tc.lang)
 			}
 			tag := i18n.GetLanguage(ctx)
 			assert.Equal(t, tc.tag, tag)

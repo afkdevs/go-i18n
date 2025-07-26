@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestI18n(t *testing.T) {
+func TestT(t *testing.T) {
 	t.Run("not initialized", func(t *testing.T) {
 		msg := i18n.T("test")
 		assert.Equal(t, "ERROR: i18n is not initialized", msg)
@@ -42,13 +42,13 @@ func TestI18n(t *testing.T) {
 		},
 		{
 			name:            "with param",
-			messageID:       "hello",
+			messageID:       "hello_name",
 			options:         []any{i18n.Param("name", "John")},
-			expectedMessage: "Hello, John!",
+			expectedMessage: "Hello, John",
 		},
 		{
 			name:            "with params",
-			messageID:       "hello_age",
+			messageID:       "hello_name_age",
 			options:         []any{i18n.Params{"name": "John", "age": 30}},
 			expectedMessage: "Hello, John! You are 30 years old.",
 		},
@@ -60,14 +60,20 @@ func TestI18n(t *testing.T) {
 		},
 		{
 			name:            "not found and use default language",
-			messageID:       "only_in_en",
+			messageID:       "hello_english",
 			options:         []any{i18n.Lang("id")},
-			expectedMessage: "This message is only available in English.",
+			expectedMessage: "Hello, This message is only available in English.",
 		},
 		{
 			name:            "not found",
 			messageID:       "not_found",
 			expectedMessage: "ERROR: missing translation for \"not_found\"",
+		},
+		{
+			name:            "invalid param type",
+			messageID:       "hello_name",
+			options:         []any{invalidParamFunc()},
+			expectedMessage: "Hello, <no value>",
 		},
 	}
 
@@ -79,7 +85,13 @@ func TestI18n(t *testing.T) {
 	}
 }
 
-func TestI18nCtx(t *testing.T) {
+func invalidParamFunc() func() string {
+	return func() string {
+		return "invalid_param"
+	}
+}
+
+func TestTCtx(t *testing.T) {
 	err := i18n.Init(language.English,
 		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
 		i18n.WithTranslationFSFile(testdata.FS, "en.yaml", "id.yaml"),
@@ -100,13 +112,13 @@ func TestI18nCtx(t *testing.T) {
 		},
 		{
 			name:            "with param",
-			messageID:       "hello",
+			messageID:       "hello_name",
 			options:         []any{i18n.Param("name", "John")},
-			expectedMessage: "Hello, John!",
+			expectedMessage: "Hello, John",
 		},
 		{
 			name:            "with params",
-			messageID:       "hello_age",
+			messageID:       "hello_name_age",
 			options:         []any{i18n.Params{"name": "John", "age": 30}},
 			expectedMessage: "Hello, John! You are 30 years old.",
 		},
@@ -124,10 +136,10 @@ func TestI18nCtx(t *testing.T) {
 		},
 		{
 			name:            "not found and use default language",
-			messageID:       "only_in_en",
+			messageID:       "hello_english",
 			language:        "id",
 			options:         []any{i18n.Lang("es")},
-			expectedMessage: "This message is only available in English.",
+			expectedMessage: "Hello, This message is only available in English.",
 		},
 		{
 			name:            "not found",
@@ -140,7 +152,7 @@ func TestI18nCtx(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			if tc.language != "" {
-				ctx = i18n.NewContextWithLanguage(ctx, tc.language)
+				ctx = i18n.SetLangToContext(ctx, tc.language)
 			}
 			message := i18n.TCtx(ctx, tc.messageID, tc.options...)
 			assert.Equal(t, tc.expectedMessage, message)
@@ -148,10 +160,13 @@ func TestI18nCtx(t *testing.T) {
 	}
 }
 
-func TestI18nWhenTranslationNotFound(t *testing.T) {
-	err := i18n.Init(language.English, i18n.WithTranslationFile("testdata/es.yaml"))
-	assert.Error(t, err)
-
-	err = i18n.Init(language.English, i18n.WithTranslationFSFile(testdata.FS, "es.yaml"))
-	assert.Error(t, err)
+func TestInit(t *testing.T) {
+	t.Run("when translation files not found", func(t *testing.T) {
+		err := i18n.Init(language.English, i18n.WithTranslationFile("testdata/es.yaml"))
+		assert.Error(t, err)
+	})
+	t.Run("when translation files not found in FS", func(t *testing.T) {
+		err := i18n.Init(language.English, i18n.WithTranslationFSFile(testdata.FS, "es.yaml"))
+		assert.Error(t, err)
+	})
 }
