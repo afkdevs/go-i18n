@@ -2,7 +2,6 @@ package i18n
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/text/language"
@@ -12,19 +11,31 @@ type contextKey string
 
 const languageCtxKey contextKey = "i18n-language"
 
-// Middleware is a middleware that sets the language to the context from the request.
+func defaultLanguageHandler(headerKey string) func(r *http.Request) string {
+	return func(r *http.Request) string {
+		return r.Header.Get(headerKey)
+	}
+}
+
+// NewMiddleware creates a middleware that sets the language to the context from the request.
 //
 // It uses the Accept-Language header to get the language.
-func Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lang := r.Header.Get("Accept-Language")
-		if lang != "" {
-			fmt.Println("lang", lang)
-			ctx := NewContextWithLanguage(r.Context(), lang)
-			r = r.WithContext(ctx)
-		}
-		next.ServeHTTP(w, r)
-	})
+func NewMiddleware(opts ...MiddlewareOption) func(http.Handler) http.Handler {
+	cfg := newMiddlewareConfig(opts...)
+	if cfg.langHandler == nil {
+		cfg.langHandler = defaultLanguageHandler(cfg.headerKey)
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			lang := cfg.langHandler(r)
+			if lang != "" {
+				ctx := NewContextWithLanguage(r.Context(), lang)
+				r = r.WithContext(ctx)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // GetLanguage returns the language tag from the context.

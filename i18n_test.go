@@ -14,9 +14,8 @@ import (
 
 func TestI18n(t *testing.T) {
 	t.Run("not initialized", func(t *testing.T) {
-		assert.Panics(t, func() {
-			i18n.T("message.test")
-		})
+		msg := i18n.T("test")
+		assert.Equal(t, "ERROR: i18n is not initialized", msg)
 	})
 	err := i18n.Init(language.English,
 		i18n.WithUnmarshalFunc("yaml", yaml.Unmarshal),
@@ -68,7 +67,7 @@ func TestI18n(t *testing.T) {
 		{
 			name:            "not found",
 			messageID:       "not_found",
-			expectedMessage: "not_found",
+			expectedMessage: "ERROR: missing translation for \"not_found\"",
 		},
 	}
 
@@ -133,7 +132,7 @@ func TestI18nCtx(t *testing.T) {
 		{
 			name:            "not found",
 			messageID:       "not_found",
-			expectedMessage: "not_found",
+			expectedMessage: "ERROR: missing translation for \"not_found\"",
 		},
 	}
 
