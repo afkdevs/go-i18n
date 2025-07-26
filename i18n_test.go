@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ahmadfaizk/i18n"
-	"github.com/ahmadfaizk/i18n/testdata"
+	"github.com/afkdevs/go-i18n"
+	"github.com/afkdevs/go-i18n/testdata"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/text/language"

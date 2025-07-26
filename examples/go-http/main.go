@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ahmadfaizk/i18n"
+	"github.com/afkdevs/go-i18n"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 )
